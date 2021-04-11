@@ -71,6 +71,21 @@ router.get("/:id", async (req, res) => {
             errorCode: "SHORT_URL_INVALID"
         })
     }
+});
+
+router.get("/logs/:id", async (req, res) => {
+
+    const shortHashUrl = req.params.id;
+    const urlConfig = await UrlConfigModel.findOne({shortUrl: shortHashUrl});
+
+    if(urlConfig) {
+        res.send({
+            numOfHits: urlConfig.logging.numOfHits,
+            hitsInfo: urlConfig.logging.hitsInfo
+        });
+    } else {
+        res.status(500).send();
+    }
 })
 
 module.exports = router;
