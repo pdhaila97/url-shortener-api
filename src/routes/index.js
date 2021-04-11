@@ -9,7 +9,24 @@ router.post("/generate", async (req, res) => {
     const longUrl = req.body.url;
     const expiryTime = req.query.expiryTime;
     const loggingEnabled = req.query.loggingEnabled;
-    const shortHashUrl = nanoid(CONSTANTS.defaultIdLength); // ~1 thousand years needed, in order to have a 1% probability of at least one collision.
+    const customShortUrl = req.query.customShortUrl;
+    
+    let shortHashUrl;
+
+    if(customShortUrl) {
+        shortHashUrl = customShortUrl;
+        const urlConfig = await UrlConfigModel.findOne({shortUrl: shortHashUrl});
+
+        if(urlConfig) {
+            res.status(500).send({
+                errorCode: "SHORT_URL_EXISTS"
+            });
+            return;
+        }
+        
+    } else {
+        shortHashUrl = nanoid(CONSTANTS.defaultIdLength); // ~1 thousand years needed, in order to have a 1% probability of at least one collision.
+    }
 
     const urlConfigVal = {
         longUrl: longUrl,
@@ -23,6 +40,7 @@ router.post("/generate", async (req, res) => {
             isEnabled: loggingEnabled === "true"
         }
     }
+
     const urlConfig = new UrlConfigModel(urlConfigVal);
 
     await urlConfig.save();
